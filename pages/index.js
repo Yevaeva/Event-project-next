@@ -1,16 +1,42 @@
-import Head from "next/head";
-import Image from "next/image";
-import Link from "next/link";
-import EventList from "../components/events/event-list";
-import { getFeaturedEvents } from "../dummy-data";
-import styles from "../styles/Home.module.css";
+import fs from 'fs/promises';
+import Link from 'next/link';
+import path from 'path';
 
-export default function HomePage() {
-  const featuredEvents = getFeaturedEvents();
+export default function HomePage(props) {
+  const { products } = props;
   return (
-    <div className={styles.container}>
-      <h1>The Home Page</h1>
-      <EventList items={ featuredEvents} />
+    <div>
+      <ul>
+        {products.map((product) => (
+          <li key={product.id}>
+            <Link href={`/products/${product.id}`}>{product.title}</Link>
+          </li>
+        ))}
+      </ul>
     </div>
   );
+}
+
+export async function getStaticProps() {
+  console.log('retessh')
+  const filePath = path.join(process.cwd(), 'data','dummy-backend.json')
+  const jsonData = await fs.readFile(filePath);
+  const data = JSON.parse(jsonData)
+
+  if (!data) {
+    return {
+      redirect: {
+        destination:'/no-data'
+      }
+    }
+  }
+  if (!data.products.length) {
+    return {notFound:true}
+  }
+  return {
+    props: {
+      products: data.products,
+    },
+    revalidate: 10,
+  };
 }
